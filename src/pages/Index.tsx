@@ -26,6 +26,8 @@ type Skill = {
   name: string;
   hours: number;
   icon: string;
+  timerRunning?: boolean;
+  timerStart?: number;
 };
 
 const Index = () => {
@@ -41,6 +43,7 @@ const Index = () => {
   const [hoursToAdd, setHoursToAdd] = useState('');
   const [isAddSkillOpen, setIsAddSkillOpen] = useState(false);
   const [isAddHoursOpen, setIsAddHoursOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState(Date.now());
 
   useEffect(() => {
     if (isDark) {
@@ -49,6 +52,13 @@ const Index = () => {
       document.documentElement.classList.remove('dark');
     }
   }, [isDark]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const getSkillLevel = (hours: number) => {
     for (let i = SKILL_LEVELS.length - 1; i >= 0; i--) {
@@ -84,6 +94,38 @@ const Index = () => {
       setNewSkillName('');
       setIsAddSkillOpen(false);
     }
+  };
+
+  const toggleTimer = (skillId: string) => {
+    setSkills(skills.map(skill => {
+      if (skill.id === skillId) {
+        if (skill.timerRunning) {
+          const elapsed = (Date.now() - (skill.timerStart || Date.now())) / 1000 / 3600;
+          return {
+            ...skill,
+            timerRunning: false,
+            timerStart: undefined,
+            hours: skill.hours + elapsed
+          };
+        } else {
+          return {
+            ...skill,
+            timerRunning: true,
+            timerStart: Date.now()
+          };
+        }
+      }
+      return skill;
+    }));
+  };
+
+  const getTimerDisplay = (skill: Skill) => {
+    if (!skill.timerRunning || !skill.timerStart) return '00:00:00';
+    const elapsed = Math.floor((currentTime - skill.timerStart) / 1000);
+    const hours = Math.floor(elapsed / 3600);
+    const minutes = Math.floor((elapsed % 3600) / 60);
+    const seconds = elapsed % 60;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   };
 
   const addHours = () => {
@@ -231,17 +273,36 @@ const Index = () => {
                     )}
                   </div>
 
-                  <Button
-                    variant="outline"
-                    className="w-full gap-2 hover:bg-primary hover:text-white transition-colors"
-                    onClick={() => {
-                      setSelectedSkillId(skill.id);
-                      setIsAddHoursOpen(true);
-                    }}
-                  >
-                    <Icon name="Clock" size={18} />
-                    Добавить время
-                  </Button>
+                  {skill.timerRunning && (
+                    <div className="text-center py-3 px-4 bg-primary/10 rounded-lg border-2 border-primary/30">
+                      <div className="text-2xl font-mono font-bold text-primary">
+                        {getTimerDisplay(skill)}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">Таймер активен</div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant={skill.timerRunning ? "destructive" : "default"}
+                      className="gap-2"
+                      onClick={() => toggleTimer(skill.id)}
+                    >
+                      <Icon name={skill.timerRunning ? "Square" : "Play"} size={18} />
+                      {skill.timerRunning ? 'Стоп' : 'Старт'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="gap-2 hover:bg-primary hover:text-white transition-colors"
+                      onClick={() => {
+                        setSelectedSkillId(skill.id);
+                        setIsAddHoursOpen(true);
+                      }}
+                    >
+                      <Icon name="Clock" size={18} />
+                      Добавить
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             );
