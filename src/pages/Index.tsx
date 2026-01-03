@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +29,7 @@ type Skill = {
 };
 
 const Index = () => {
+  const [isDark, setIsDark] = useState(true);
   const [skills, setSkills] = useState<Skill[]>([
     { id: '1', name: 'Программирование', hours: 2450, icon: 'Code2' },
     { id: '2', name: 'Дизайн', hours: 780, icon: 'Palette' },
@@ -40,6 +41,14 @@ const Index = () => {
   const [hoursToAdd, setHoursToAdd] = useState('');
   const [isAddSkillOpen, setIsAddSkillOpen] = useState(false);
   const [isAddHoursOpen, setIsAddHoursOpen] = useState(false);
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDark]);
 
   const getSkillLevel = (hours: number) => {
     for (let i = SKILL_LEVELS.length - 1; i >= 0; i--) {
@@ -94,18 +103,28 @@ const Index = () => {
   const totalHours = skills.reduce((sum, skill) => sum + skill.hours, 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30 py-12 px-4">
       <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
         <div className="text-center space-y-4">
-          <h1 className="text-5xl font-bold text-foreground tracking-tight">
-            10,000 часов
-          </h1>
+          <div className="flex justify-center items-center gap-4 mb-4">
+            <h1 className="text-5xl font-bold text-foreground tracking-tight">
+              10,000 часов
+            </h1>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setIsDark(!isDark)}
+              className="rounded-full"
+            >
+              <Icon name={isDark ? 'Sun' : 'Moon'} size={20} />
+            </Button>
+          </div>
           <p className="text-muted-foreground text-lg">
             Путь к мастерству через систематическую практику
           </p>
         </div>
 
-        <Card className="bg-white/80 backdrop-blur shadow-lg border-0 animate-scale-in">
+        <Card className="backdrop-blur shadow-lg animate-scale-in">
           <CardHeader>
             <CardTitle className="flex items-center gap-3 text-2xl">
               <Icon name="TrendingUp" size={28} className="text-primary" />
@@ -114,16 +133,16 @@ const Index = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center p-6 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl">
+              <div className="text-center p-6 bg-gradient-to-br from-primary/20 to-primary/10 rounded-xl border border-primary/20">
                 <div className="text-4xl font-bold text-primary">{totalHours}</div>
                 <div className="text-sm text-muted-foreground mt-1">Всего часов</div>
               </div>
-              <div className="text-center p-6 bg-gradient-to-br from-purple-100 to-purple-50 rounded-xl">
-                <div className="text-4xl font-bold text-purple-600">{skills.length}</div>
+              <div className="text-center p-6 bg-gradient-to-br from-purple-500/20 to-purple-500/10 rounded-xl border border-purple-500/20">
+                <div className="text-4xl font-bold text-purple-400">{skills.length}</div>
                 <div className="text-sm text-muted-foreground mt-1">Навыков в работе</div>
               </div>
-              <div className="text-center p-6 bg-gradient-to-br from-orange-100 to-orange-50 rounded-xl">
-                <div className="text-4xl font-bold text-orange-600">
+              <div className="text-center p-6 bg-gradient-to-br from-orange-500/20 to-orange-500/10 rounded-xl border border-orange-500/20">
+                <div className="text-4xl font-bold text-orange-400">
                   {skills.filter(s => s.hours >= 10000).length}
                 </div>
                 <div className="text-sm text-muted-foreground mt-1">Достигли легенды</div>
