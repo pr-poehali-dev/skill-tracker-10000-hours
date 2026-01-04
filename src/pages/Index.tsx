@@ -21,6 +21,11 @@ const SKILL_LEVELS: SkillLevel[] = [
   { name: 'Легенда', hours: 10000, color: 'bg-gradient-to-r from-yellow-400 to-orange-500' },
 ];
 
+type DailyStats = {
+  date: string;
+  hours: number;
+};
+
 type Skill = {
   id: string;
   name: string;
@@ -28,14 +33,15 @@ type Skill = {
   icon: string;
   timerRunning?: boolean;
   timerStart?: number;
+  dailyStats?: DailyStats[];
 };
 
 const Index = () => {
   const [isDark, setIsDark] = useState(true);
   const [skills, setSkills] = useState<Skill[]>([
-    { id: '1', name: 'Программирование', hours: 2450, icon: 'Code2' },
-    { id: '2', name: 'Дизайн', hours: 780, icon: 'Palette' },
-    { id: '3', name: 'Английский язык', hours: 4200, icon: 'Languages' },
+    { id: '1', name: 'Программирование', hours: 2450, icon: 'Code2', dailyStats: [] },
+    { id: '2', name: 'Дизайн', hours: 780, icon: 'Palette', dailyStats: [] },
+    { id: '3', name: 'Английский язык', hours: 4200, icon: 'Languages', dailyStats: [] },
   ]);
 
   const [newSkillName, setNewSkillName] = useState('');
@@ -89,6 +95,29 @@ const Index = () => {
     return Math.min((hours / 10000) * 100, 100);
   };
 
+  const getTodayString = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
+  const getTodayHours = (skill: Skill) => {
+    const today = getTodayString();
+    const todayStat = skill.dailyStats?.find(s => s.date === today);
+    return todayStat?.hours || 0;
+  };
+
+  const getLast7DaysStats = (skill: Skill) => {
+    const last7Days = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateString = date.toISOString().split('T')[0];
+      const stat = skill.dailyStats?.find(s => s.date === dateString);
+      last7Days.push({ date: dateString, hours: stat?.hours || 0 });
+    }
+    return last7Days;
+  };
+
   const addSkill = () => {
     if (newSkillName.trim()) {
       const newSkill: Skill = {
@@ -96,12 +125,27 @@ const Index = () => {
         name: newSkillName,
         hours: 0,
         icon: newSkillIcon,
+        dailyStats: [],
       };
       setSkills([...skills, newSkill]);
       setNewSkillName('');
       setNewSkillIcon('Star');
       setIsAddSkillOpen(false);
     }
+  };
+
+  const updateDailyStats = (skill: Skill, hoursToAdd: number) => {
+    const today = getTodayString();
+    const dailyStats = skill.dailyStats || [];
+    const todayIndex = dailyStats.findIndex(s => s.date === today);
+    
+    if (todayIndex >= 0) {
+      dailyStats[todayIndex].hours += hoursToAdd;
+    } else {
+      dailyStats.push({ date: today, hours: hoursToAdd });
+    }
+    
+    return dailyStats;
   };
 
   const toggleTimer = (skillId: string) => {
@@ -113,7 +157,8 @@ const Index = () => {
             ...skill,
             timerRunning: false,
             timerStart: undefined,
-            hours: skill.hours + elapsed
+            hours: skill.hours + elapsed,
+            dailyStats: updateDailyStats(skill, elapsed)
           };
         } else {
           return {
@@ -141,7 +186,11 @@ const Index = () => {
     if (selectedSkillId && hours > 0) {
       setSkills(skills.map(skill =>
         skill.id === selectedSkillId
-          ? { ...skill, hours: skill.hours + hours }
+          ? { 
+              ...skill, 
+              hours: skill.hours + hours,
+              dailyStats: updateDailyStats(skill, hours)
+            }
           : skill
       ));
       setHoursToAdd('');
@@ -298,6 +347,41 @@ const Index = () => {
                         До уровня "{nextLevel.name}": {(nextLevel.hours - skill.hours).toLocaleString()} ч
                       </p>
                     )}
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 rounded-lg border border-green-200/50 dark:border-green-800/50">
+                      <div className="flex items-center gap-2">
+                        <Icon name="Calendar" size={18} className="text-green-600 dark:text-green-400" />
+                        <span className="text-sm font-medium text-green-700 dark:text-green-300">Сегодня</span>
+                      </div>
+                      <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                        {getTodayHours(skill).toFixed(1)} ч
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Icon name="BarChart3" size={16} className="text-muted-foreground" />
+                        <span className="text-xs font-medium text-muted-foreground">Последние 7 дней</span>
+                      </div>
+                      <div className="flex items-end justify-between gap-1 h-16">
+                        {getLast7DaysStats(skill).map((stat, idx) => {
+                          const maxHours = Math.max(...getLast7DaysStats(skill).map(s => s.hours), 1);
+                          const heightPercent = (stat.hours / maxHours) * 100;
+                          return (
+                            <div key={idx} className="flex-1 flex flex-col items-center gap-1">
+                              <div className="w-full bg-primary/20 rounded-t relative" style={{ height: `${heightPercent}%`, minHeight: stat.hours > 0 ? '8px' : '2px' }}>
+                                <div className="absolute inset-0 bg-primary rounded-t"></div>
+                              </div>
+                              <span className="text-[8px] text-muted-foreground">
+                                {new Date(stat.date).getDate()}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
 
                   {skill.timerRunning && (
