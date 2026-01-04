@@ -313,7 +313,7 @@ const Index = () => {
             return (
               <Card
                 key={skill.id}
-                className="bg-white/90 backdrop-blur shadow-lg border-0 hover:shadow-xl transition-all duration-300 animate-fade-in"
+                className="bg-slate-800/90 backdrop-blur shadow-lg border-0 hover:shadow-xl transition-all duration-300 animate-fade-in"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <CardHeader>
