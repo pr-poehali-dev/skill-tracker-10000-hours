@@ -39,11 +39,18 @@ const Index = () => {
   ]);
 
   const [newSkillName, setNewSkillName] = useState('');
+  const [newSkillIcon, setNewSkillIcon] = useState('Star');
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
   const [hoursToAdd, setHoursToAdd] = useState('');
   const [isAddSkillOpen, setIsAddSkillOpen] = useState(false);
   const [isAddHoursOpen, setIsAddHoursOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(Date.now());
+
+  const popularIcons = [
+    'Star', 'Code2', 'Palette', 'Languages', 'Music', 'Dumbbell', 'Book',
+    'Camera', 'Plane', 'Gamepad2', 'Guitar', 'Pencil', 'Brush', 'Coffee',
+    'Heart', 'Trophy', 'Target', 'Rocket', 'Zap', 'Lightbulb'
+  ];
 
   useEffect(() => {
     if (isDark) {
@@ -88,10 +95,11 @@ const Index = () => {
         id: Date.now().toString(),
         name: newSkillName,
         hours: 0,
-        icon: 'Target',
+        icon: newSkillIcon,
       };
       setSkills([...skills, newSkill]);
       setNewSkillName('');
+      setNewSkillIcon('Star');
       setIsAddSkillOpen(false);
     }
   };
@@ -219,6 +227,25 @@ const Index = () => {
                     onChange={(e) => setNewSkillName(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && addSkill()}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label>Выберите иконку</Label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {popularIcons.map((iconName) => (
+                      <button
+                        key={iconName}
+                        type="button"
+                        onClick={() => setNewSkillIcon(iconName)}
+                        className={`p-3 rounded-lg border-2 transition-all hover:scale-110 ${
+                          newSkillIcon === iconName
+                            ? 'border-primary bg-primary/10 scale-110'
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                      >
+                        <Icon name={iconName} size={24} className={newSkillIcon === iconName ? 'text-primary' : 'text-muted-foreground'} />
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
               <DialogFooter>
